@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Insert title here</title>
+	</head>
+	<body>
+		<input value="" type="text" id='username' name='username' required="required"> <input value="" type="password" id='password'
+		 name='password' required="required"> <input id="submit" value="提交" type="button" />
+		<script type="text/javascript" src="js/jquery-3.3.1/jquery-3.3.1.min.js"></script>
+		<script type="text/javascript" src="js/jquery-3.3.1/jquery.cookie.js"></script>
+		<script type="text/javascript"></script>
+		<script>
+			$('#submit').click(function() {
+				var username = $('#username').val();
+				if(username == ''){
+					alert('您输入的用户名不能为空');
+					return;
+				}
+				var password = $('#password').val();
+				if(password == ''){
+					alert('您输入的密码不能为空');
+					return;
+				}
+				console.log(username);
+				console.log(password);
+				$.ajax({
+					url: 'user/login.do',
+					type: 'get',
+					dataType: 'json',
+					data: {
+						username: username,
+						password: password
+					},
+					contentType:"application/json;charset=utf-8",
+					success: function(msg) {
+						console.log(msg);
+						if (msg.code == 0) {
+							alert(msg.message);
+						} else {
+							$.cookie("loginUser.username", msg.data.username);
+							$.cookie("loginUser.id", msg.data.id);
+							window.location.href = 'index.html';
+						}
+					},
+					error: function(a,b,c){
+						console.log(a);
+						console.log(b);
+						console.log(c);
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

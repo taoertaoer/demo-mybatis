@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<p id="username"></p>
+		
+	<div id="chats_list">
+	</div>
+	<input type="button" value="添加会话" id="add_chat">
+	<select id="add_chat_select" multiple="multiple">
+	
+	</select>
+	<input type="button" value="提交" id="add_chat_submit">
+	
+	<div id="chat_div"></div>
+	
+	<div id="friends_list">
+	
+	</div>
+	
+	<input type="button" value="添加好友" id="add">
+	<select id="add_friend">
+	
+	</select>
+	<input type="button" value="提交" id="add_submit">
+	
+	
+	<input type="button" value="退出" id="logout"/>
+	<script type="text/javascript" src="js/jquery-3.3.1/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/jquery-3.3.1/jquery.cookie.js"></script>
+	<script type="text/javascript">
+		var roomId,roomName;
+		var pageSize = 5;
+		var pageNum = 1;
+		
+		$.ajax({
+			url: 'chat/showChatsByPaging.do',
+			data: {pageSize : pageSize, pageNum : pageNum},
+			type: 'get',
+			contentType: "application/json;charset=utf-8",
+			success: function(msg){
+				console.log(msg);
+				if(msg.code == 1){
+					if(msg.datas.length == 0){
+						$("#chats_list").append("<li id='first_note'>您还没有聊天，快去创建聊天吧</li>");
+					}else {
+						if(msg.datas != null){
+							console.log(msg.datas);
+							for(var i in msg.datas){
+								$("#chats_list").append("<li class='hello' id='"+msg.datas[i].id+"' data-name='"+msg.datas[i].chat_name+"'>"+msg.datas[i].chat_name+"</li>");
+							}
+						}
+					}
+					$("#chats_list li.hello").click(function(e){
+						roomId=this.id;
+						roomName=this.getAttribute('data-name');
+						console.log(e.target.id);
+						console.log(e.target.getAttribute('data-name'));
+						$("#chat_div").load("chatRoom.html");
+					});
+				}
+			}
+		});
+		
+		$("#add_chat").click(function(){
+			var pageSize = 5;
+			var pageNum = 1;
+			$.ajax({//首页显示好友列表
+				url: 'friend/showFriendsByPaging.do',
+				data: {pageSize : pageSize, pageNum : pageNum},
+				type: 'get',
+				contentType:"application/json;charset=utf-8",
+				success: function(msg){
+					console.log(msg);
+					if(msg.code == 1){
+						if(msg.datas.length == 0){
+							$("#add_chat_select").append("<li>您还没有好友，快去添加好友吧</li>");
+						}else {
+							if(msg.datas != null){
+								for(var i in msg.datas){
+									$("#add_chat_select").append("<option value='"+msg.datas[i].id+"'>"+msg.datas[i].username+"</option>");
+								}
+							}
+						}
+					}
+				}
+			});
+		});
+		$("#add_chat_submit").click(function(){
+			var userIds=$("#add_chat_select").val();
+			console.log(userIds);
+			console.log($("#add_chat_select option:selected").text());
+			$("#add_chat_select option:selected").each(function () {
+			     console.log($(this).val())
+			     console.log($(this).text())
+			})
+			if(userIds.length==0){
+				alert("请选择用户");
+			}else if(userIds.length==1){
+				
+				$("#chat_div").load("chatRoom.html");
+			}else{
+				var chatName = window.prompt("请输入群名称","我的聊天群"); 
+				console.log(chatName); 
+				$.ajax({
+					url: 'chat/addChat.do',
+					type: 'post',
+					traditional:true,
+					data: {chatName : chatName, userIds : userIds},
+					contentType:"application/x-www-form-urlencoded;charset=utf-8",
+					success: function(msg){
+						console.log(msg);
+						if(msg.code == 1){
+							$("#chats_list #first_note").remove();
+							$("#chats_list").prepend("<li id='"+msg.datas.id+"'>"+msg.datas.chatName+"</li>");
+							$("#chat_div").load("chatRoom.html");
+						}
+					}
+				});
+			}
+		});
+		
+		
+		$.ajax({//首页显示好友列表
+			url: 'friend/showFriendsByPaging.do',
+			data: {pageSize : pageSize, pageNum : pageNum},
+			type: 'get',
+			contentType:"application/json;charset=utf-8",
+			success: function(msg){
+				console.log(msg);
+				if(msg.code == 1){
+					if(msg.datas.length == 0){
+						$("#friends_list").append("<li>您还没有好友，快去添加好友吧</li>");
+					}else {
+						for(var i in msg.datas){
+							$("#friends_list").append("<li name='"+msg.datas[i].id+"' class='friend_to_chat'>"+msg.datas[i].username+"</li>");
+						}
+					}
+				}
+			}
+		});
+
+		$("#add").click(function(){//显示平台的用户
+			var pageSize = 5;
+			var pageNum = 1;
+			$.ajax({
+				url: 'user/findByPage.do',
+				type : 'get',
+				data: {pageSize : pageSize, pageNum : pageNum},
+				contentType:"application/json;charset=utf-8",
+				success: function(msg){
+					console.log(msg);
+					if(msg.code == 1){
+						if(msg.datas.length == 0){
+							
+						}else{
+							for(var i in msg.datas){
+								$("#add_friend").append("<option value='"+msg.datas[i].id+"'>"+msg.datas[i].username+"</option>");
+							}
+						}
+					}
+				}
+			});
+		});
+		
+		$("#add_submit").click(function(){
+			var friend_id = $("#add_friend").val();
+			var user_id = $.cookie("loginUser.id");
+			console.log(user_id);
+			console.log(friend_id);
+			$.ajax({
+				data: {friendId : friend_id, userId : user_id},
+				url: 'friend/addFriend.do',
+				type: 'post',
+				contentType:"application/x-www-form-urlencoded;charset=utf-8",
+				success: function(msg){
+					console.log(msg);
+					if(msg.code == 1){
+						if(msg.datas != null){
+							$("#friends_list").append("<li name='"+msg.datas[i].id+"' class='friend_to_chat'>"+msg.datas.username+"</li>");
+						}
+					}
+				}
+			});
+		});
+		
+		username.innerText=$.cookie("loginUser.username");
+		$('#logout').click(function(){
+			console.log("logout");
+			$.ajax({
+				url: 'user/logout.do',
+				type: 'get',
+				contentType:"application/json;charset=utf-8",
+				success: function(msg){
+					console.log(msg);
+					if(msg.code == 1){
+						$.cookie("loginUser.username", null);
+						window.location.href='/login.html';
+					}
+				}
+			});
+		});
+	</script>
+</body>
+</html>

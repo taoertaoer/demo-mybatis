@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdd.dao.FriendMapper">
+  <resultMap id="BaseResultMap" type="com.xdd.entity.Friend">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="friend_id" jdbcType="INTEGER" property="friendId" />
+    <result column="is_valid" jdbcType="INTEGER" property="isValid" />
+    <result column="creater_id" jdbcType="INTEGER" property="createrId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_id, friend_id, is_valid, creater_id, create_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from friend
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from friend
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.xdd.entity.Friend">
+    insert into friend (id, user_id, friend_id, 
+      is_valid, creater_id, create_time
+      )
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{friendId,jdbcType=INTEGER}, 
+      #{isValid,jdbcType=INTEGER}, #{createrId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.xdd.entity.Friend">
+    insert into friend
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="friendId != null">
+        friend_id,
+      </if>
+      <if test="isValid != null">
+        is_valid,
+      </if>
+      <if test="createrId != null">
+        creater_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="friendId != null">
+        #{friendId,jdbcType=INTEGER},
+      </if>
+      <if test="isValid != null">
+        #{isValid,jdbcType=INTEGER},
+      </if>
+      <if test="createrId != null">
+        #{createrId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.xdd.entity.Friend">
+    update friend
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="friendId != null">
+        friend_id = #{friendId,jdbcType=INTEGER},
+      </if>
+      <if test="isValid != null">
+        is_valid = #{isValid,jdbcType=INTEGER},
+      </if>
+      <if test="createrId != null">
+        creater_id = #{createrId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.xdd.entity.Friend">
+    update friend
+    set user_id = #{userId,jdbcType=INTEGER},
+      friend_id = #{friendId,jdbcType=INTEGER},
+      is_valid = #{isValid,jdbcType=INTEGER},
+      creater_id = #{createrId,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="showFriendsByPaging" parameterType="java.lang.Integer" resultType="hashmap">
+	SELECT
+		DISTINCT u.id,u.username
+	FROM
+		(
+			SELECT
+				f.friend_id id
+			FROM
+				friend f
+			WHERE
+				f.user_id = #{userId,jdbcType=INTEGER}
+			UNION ALL
+				SELECT
+					f.user_id id
+				FROM
+					friend f
+				WHERE
+					f.friend_id = #{userId,jdbcType=INTEGER}
+		)t
+	LEFT JOIN USER u ON t.id = u.id
+  </select>
+</mapper>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdd.dao.ChatMapper">
+	<resultMap id="BaseResultMap" type="com.xdd.entity.Chat">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="creater_id" jdbcType="INTEGER"
+			property="createrId" />
+		<result column="create_time" jdbcType="TIMESTAMP"
+			property="createTime" />
+		<result column="is_group" jdbcType="INTEGER" property="isGroup" />
+		<result column="chat_name" jdbcType="VARCHAR"
+			property="chatName" />
+		<result column="is_valid" jdbcType="INTEGER" property="isValid" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, creater_id, create_time, is_group, chat_name, is_valid
+	</sql>
+	<select id="selectByPrimaryKey"
+		parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from chat
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey"
+		parameterType="java.lang.Integer">
+		delete from chat
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.xdd.entity.Chat">
+		insert into chat (id, creater_id, create_time,
+		is_group, chat_name, is_valid
+		)
+		values (#{id,jdbcType=INTEGER}, #{createrId,jdbcType=INTEGER},
+		#{createTime,jdbcType=TIMESTAMP},
+		#{isGroup,jdbcType=INTEGER}, #{chatName,jdbcType=VARCHAR}, #{isValid,jdbcType=INTEGER}
+		)
+	</insert>
+	<insert id="insertBatchReturnId" keyProperty="id"
+		parameterType="com.xdd.entity.Chat" useGeneratedKeys="true">
+		insert into chat (id, creater_id, create_time,
+		is_group, chat_name, is_valid
+		)
+		values (#{id,jdbcType=INTEGER}, #{createrId,jdbcType=INTEGER},
+		#{createTime,jdbcType=TIMESTAMP},
+		#{isGroup,jdbcType=INTEGER}, #{chatName,jdbcType=VARCHAR}, #{isValid,jdbcType=INTEGER}
+		)
+	</insert>
+
+	<insert id="insertSelective" parameterType="com.xdd.entity.Chat">
+		insert into chat
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="createrId != null">
+				creater_id,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+			<if test="isGroup != null">
+				is_group,
+			</if>
+			<if test="chatName != null">
+				chat_name,
+			</if>
+			<if test="isValid != null">
+				is_valid,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="createrId != null">
+				#{createrId,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="isGroup != null">
+				#{isGroup,jdbcType=INTEGER},
+			</if>
+			<if test="chatName != null">
+				#{chatName,jdbcType=VARCHAR},
+			</if>
+			<if test="isValid != null">
+				#{isValid,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="com.xdd.entity.Chat">
+		update chat
+		<set>
+			<if test="createrId != null">
+				creater_id = #{createrId,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="isGroup != null">
+				is_group = #{isGroup,jdbcType=INTEGER},
+			</if>
+			<if test="chatName != null">
+				chat_name = #{chatName,jdbcType=VARCHAR},
+			</if>
+			<if test="isValid != null">
+				is_valid = #{isValid,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="com.xdd.entity.Chat">
+		update chat
+		set creater_id = #{createrId,jdbcType=INTEGER},
+		create_time = #{createTime,jdbcType=TIMESTAMP},
+		is_group = #{isGroup,jdbcType=INTEGER},
+		chat_name = #{chatName,jdbcType=VARCHAR},
+		is_valid = #{isValid,jdbcType=INTEGER}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+
+
+
+	<select id="showChatsByPaging" parameterType="hashmap"
+		resultType="hashmap">
+		SELECT
+		cha.id,cha.chat_name,cha.lastest_time
+		FROM
+		chat cha
+		WHERE
+		exists(
+		SELECT
+		cu.chat_id
+		FROM
+		chat_user cu
+		WHERE
+		cu.user_id = 1 and cu.chat_id = cha.id
+		) and cha.is_valid =1
+		order by cha.lastest_time desc
+	</select>
+	<select id="getChat" parameterType="hashMap"
+		resultType="hashmap">
+		SELECT
+		c.id,
+		c.chat_name
+		FROM
+		chat_user cu
+		LEFT JOIN chat c ON cu.is_valid = 1
+		AND cu.user_id = #{user_id,jdbcType=INTEGER}
+		AND cu.creater_id = #{user_id,jdbcType=INTEGER}
+		AND cu.friend_id = #{friend_id,jdbcType=INTEGER}
+		AND cu.chat_id = c.id
+		AND c.is_valid = 1
+		AND c.is_group = 0
+		union ALL
+		SELECT
+		c.id,
+		c.chat_name
+		FROM
+		chat_user cu
+		LEFT JOIN chat c ON cu.is_valid = 1
+		AND cu.friend_id = #{user_id,jdbcType=INTEGER}
+		AND cu.creater_id = #{friend_id,jdbcType=INTEGER}
+		AND cu.user_id = #{friend_id,jdbcType=INTEGER}
+		AND cu.chat_id = c.id
+		AND c.is_valid = 1
+		AND c.is_group = 0
+	</select>
+</mapper>
